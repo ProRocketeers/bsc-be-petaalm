@@ -6,7 +6,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
+import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import com.prorocketeers.bsc.payment.tracker.domain.LedgerSummary;
 
@@ -50,14 +52,15 @@ public class LedgerSummaryStreamPrinter implements LedgerSummaryPrinter {
     }
 
     protected String prettyPrint(LedgerSummary ledgerSummary) {
-        Map<String, BigDecimal> entries = ledgerSummary.getNonZeroEntries();
-        List<String> currencies = new ArrayList<>(entries.keySet());
-        currencies.sort(null);
-        StringBuilder result = new StringBuilder();
-        for (String currency : currencies) {
-            result.append(currency).append(" ").append(entries.get(currency)).append(System.lineSeparator());
-        }
-        return result.toString();
+
+        final Map<String, BigDecimal> entries = ledgerSummary.getNonZeroEntries();
+        Function<String, String> toLedgerLine = currency -> String.format("%s %s%n", currency, entries.get(currency));
+
+        return entries.keySet()
+            .stream()
+            .sorted()
+            .map(toLedgerLine)
+            .collect(Collectors.joining());
     }
 
     private void verboseMessage(Supplier<String> messageSupplier) {

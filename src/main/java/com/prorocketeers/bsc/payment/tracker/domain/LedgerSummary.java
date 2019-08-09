@@ -1,9 +1,14 @@
 package com.prorocketeers.bsc.payment.tracker.domain;
 
+import lombok.Getter;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /**
  * Immutable representation of a ledger summary (i.e. list of all currency balances
@@ -13,6 +18,7 @@ import java.util.Map;
  */
 public class LedgerSummary {
 
+    @Getter
     private final LocalDateTime lastUpdateTime;
     private final Map<String, BigDecimal> currencyBalance;
 
@@ -36,18 +42,13 @@ public class LedgerSummary {
      * from zero (and isn't null).
      */
     public Map<String, BigDecimal> getNonZeroEntries() {
-        Map<String, BigDecimal> result = new HashMap<>();
-        for (String currency : currencyBalance.keySet()) {
-            BigDecimal value = getAmountForCurrency(currency);
-            if (BigDecimal.ZERO.compareTo(value) != 0) {
-                result.put(currency, value);
-            }
-        }
-        return result;
-    }
+        Predicate<Map.Entry<String, BigDecimal>> isNotZeroOrNull = entry ->
+            BigDecimal.ZERO.compareTo(Optional.ofNullable(entry.getValue()).orElse(BigDecimal.ZERO)) != 0;
 
-    public LocalDateTime getLastUpdateTime() {
-        return lastUpdateTime;
+        return currencyBalance.entrySet()
+            .stream()
+            .filter(isNotZeroOrNull)
+            .collect(Collectors.toUnmodifiableMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
 }

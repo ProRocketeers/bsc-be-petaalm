@@ -1,10 +1,12 @@
 package com.prorocketeers.bsc.payment.tracker.domain;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
 
@@ -35,6 +37,9 @@ public class LedgerSummaryTest {
     }
 
     static Stream<Arguments> provideLedgerSummaries() {
+        final Map<String, BigDecimal> mapWithNullValue = new HashMap<>();
+        mapWithNullValue.put("USD", BigDecimal.TEN);
+        mapWithNullValue.put("CZK", null);
         return Stream.of(
             arguments(
                 new LedgerSummary(Map.of("USD", BigDecimal.TEN, "CZK", BigDecimal.ZERO), LocalDateTime.now()),
@@ -46,6 +51,10 @@ public class LedgerSummaryTest {
             ),
             arguments(
                 new LedgerSummary(Map.of("USD", BigDecimal.TEN, "CZK", new BigDecimal("0.00")), LocalDateTime.now()),
+                Map.of("USD", BigDecimal.TEN)
+            ),
+            arguments(
+                new LedgerSummary(mapWithNullValue, LocalDateTime.now()),
                 Map.of("USD", BigDecimal.TEN)
             )
         );
